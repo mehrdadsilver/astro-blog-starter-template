@@ -1,50 +1,148 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { SITE_TITLE, SITE_DESCRIPTION, CATEGORIES } from '../consts';
+import { getCollection } from 'astro:content';
+import FormattedDate from '../components/FormattedDate.astro';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const recentPosts = posts.slice(0, 6);
+
+const categoryCounts: Record<string, number> = {};
+for (const cat of CATEGORIES) {
+	categoryCounts[cat.slug] = posts.filter((p) => p.data.category === cat.slug).length;
+}
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<SiteLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+	<section class="hero">
+		<div class="hero-portrait">
+			<div class="portrait-ring">
+				<img src="/mehrdad.png" alt="Mehrdad Abdolghafari" width="160" height="160" />
+			</div>
+		</div>
+		<h1 class="gradient-name">Mehrdad Abdolghafari</h1>
+		<p>Principal Cloud Engineer at RBC · Microsoft MVP · Microsoft Ignite Speaker</p>
+		<p class="hero-sub">Leading Azure Kubernetes Platform, AI infrastructure, and cloud-native solutions at enterprise scale.</p>
+		<div class="hero-badges">
+			<span class="hero-badge mvp">🏆 Microsoft MVP</span>
+			<span class="hero-badge ignite">🎤 Ignite Speaker</span>
+			<span class="hero-badge patent">📜 US Patent Holder</span>
+			<span class="hero-badge rbc">🏦 RBC</span>
+		</div>
+	</section>
+
+	<div class="stats-bar">
+		{CATEGORIES.map((cat) => (
+			<div class="stat">
+				<div class="stat-value">{categoryCounts[cat.slug]}</div>
+				<div class="stat-label">{cat.name}</div>
+			</div>
+		))}
+		<div class="stat">
+			<div class="stat-value">{posts.length}</div>
+			<div class="stat-label">Total Articles</div>
+		</div>
+	</div>
+
+	<div class="page-header">
+		<h2>Latest Articles</h2>
+	</div>
+
+	<div class="cards-grid">
+		{recentPosts.map((post) => {
+			const cat = CATEGORIES.find((c) => c.slug === post.data.category);
+			return (
+				<a href={`/blog/${post.id}`} class="card">
+					<div class="card-category">{cat?.icon} {cat?.name}</div>
+					<h3 class="card-title">{post.data.title}</h3>
+					<p class="card-description">{post.data.description}</p>
+					<div class="card-date"><FormattedDate date={post.data.pubDate} /></div>
+				</a>
+			);
+		})}
+	</div>
+</SiteLayout>
+
+<style>
+	.hero-portrait {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 1.5rem;
+	}
+	.portrait-ring {
+		position: relative;
+		width: 168px;
+		height: 168px;
+		border-radius: 50%;
+		background: linear-gradient(270deg, #6366f1, #22d3ee, #10b981, #a78bfa, #f472b6, #6366f1);
+		background-size: 300% 300%;
+		padding: 4px;
+		box-shadow:
+			0 0 30px rgba(99, 102, 241, 0.3),
+			0 0 60px rgba(34, 211, 238, 0.15);
+		animation: ring-rotate 6s ease infinite, ring-glow 4s ease-in-out infinite alternate;
+	}
+	@keyframes ring-rotate {
+		0% { background-position: 0% 50%; }
+		50% { background-position: 100% 50%; }
+		100% { background-position: 0% 50%; }
+	}
+	@keyframes ring-glow {
+		0% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.3), 0 0 60px rgba(34, 211, 238, 0.1); }
+		100% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.5), 0 0 80px rgba(34, 211, 238, 0.25); }
+	}
+	.portrait-ring img {
+		width: 160px;
+		height: 160px;
+		border-radius: 50%;
+		object-fit: cover;
+		display: block;
+		border: 3px solid var(--bg-primary);
+	}
+	.hero-badges {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-top: 1.25rem;
+	}
+	.hero-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.3rem 0.7rem;
+		border-radius: 8px;
+		font-size: 0.72rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+	}
+	.hero-badge.mvp {
+		background: rgba(255, 180, 0, 0.1);
+		color: #fbbf24;
+		border: 1px solid rgba(255, 180, 0, 0.2);
+	}
+	.hero-badge.ignite {
+		background: rgba(99, 102, 241, 0.1);
+		color: var(--accent-light);
+		border: 1px solid rgba(99, 102, 241, 0.2);
+	}
+	.hero-badge.patent {
+		background: rgba(251, 191, 36, 0.08);
+		color: #fbbf24;
+		border: 1px solid rgba(251, 191, 36, 0.18);
+	}
+	.hero-badge.rbc {
+		background: rgba(34, 211, 238, 0.08);
+		color: var(--cyan);
+		border: 1px solid rgba(34, 211, 238, 0.18);
+	}
+	.hero-sub {
+		font-size: 0.95rem;
+		color: var(--text-muted);
+		margin-top: 0.25rem;
+	}
+</style>
+</style>

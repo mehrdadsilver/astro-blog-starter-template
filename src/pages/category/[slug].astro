@@ -1,0 +1,44 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { CATEGORIES } from '../../consts';
+import { getCollection } from 'astro:content';
+import FormattedDate from '../../components/FormattedDate.astro';
+
+export function getStaticPaths() {
+	return CATEGORIES.map((cat) => ({
+		params: { slug: cat.slug },
+		props: { category: cat },
+	}));
+}
+
+const { category } = Astro.props;
+const posts = (await getCollection('blog'))
+	.filter((p) => p.data.category === category.slug)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<SiteLayout
+	title={`${category.name} — Mehrdad Abdolghafari`}
+	description={`Articles about ${category.name}`}
+	activeCategory={category.slug}
+>
+	<div class="page-header">
+		<h1>{category.icon} {category.name}</h1>
+		<p>{posts.length} article{posts.length !== 1 ? 's' : ''} in this category</p>
+	</div>
+
+	{posts.length === 0 ? (
+		<p style="color: var(--text-muted);">No articles yet. Check back soon!</p>
+	) : (
+		<div class="cards-grid">
+			{posts.map((post) => (
+				<a href={`/blog/${post.id}`} class="card">
+					<div class="card-category">{category.icon} {category.name}</div>
+					<h3 class="card-title">{post.data.title}</h3>
+					<p class="card-description">{post.data.description}</p>
+					<div class="card-date"><FormattedDate date={post.data.pubDate} /></div>
+				</a>
+			))}
+		</div>
+	)}
+</SiteLayout>
